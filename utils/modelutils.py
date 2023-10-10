@@ -12,6 +12,17 @@ def find_layers(module, layers=[nn.Conv2d, nn.Linear], name=''):
         res.update(find_layers(child, layers=layers, name=name + '.' + name1 if name != '' else name1))
     return res
 
+def update_layer_tensors(module, quantizers, name=''):
+    for attr in dir(module):
+        tmp = getattr(module, attr)
+        name1 = name + '.' + attr if name != '' else attr
+        if name1 in quantizers:
+            # update layer weight
+            with torch.no_grad():
+                tmp.weight.copy_(quantizers[name1][4])
+            setattr (module, attr, tmp)
+    for name1, child in module.named_children():
+        update_layer_tensors(child, quantizers, name + '.' + name1 if name != '' else name1)
 
 def gen_conditions(_wbits, _groupsize):
     wbits = _wbits

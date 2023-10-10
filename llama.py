@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 import numpy as np
 import torch
@@ -6,7 +7,7 @@ import torch.nn as nn
 import quant
 
 from gptq import GPTQ, Observer
-from utils import find_layers, DEV, set_seed, get_wikitext2, get_ptb, get_c4, get_ptb_new, get_c4_new, get_loaders, export_quant_table, gen_conditions
+from utils import find_layers, DEV, set_seed, get_wikitext2, get_ptb, get_c4, get_ptb_new, get_c4_new, get_loaders, export_quant_table, gen_conditions, update_layer_tensors
 from texttable import Texttable
 
 
@@ -74,6 +75,8 @@ def llama_sequential(model, dataloader, dev):
 
     quantizers = {}
     observer = Observer()
+    orig_bits = 0
+    dyn_bits = 0
     for i in range(len(layers)):
 
         print(f'Quantizing layer {i+1}/{len(layers)}..')
@@ -92,7 +95,13 @@ def llama_sequential(model, dataloader, dev):
             subset = {n: full[n] for n in names}
             gptq = {}
             for name in subset:
-                gptq[name] = GPTQ(subset[name], observe=args.observe)
+                gptq[name] = GPTQ(subset[name], observe=args.observe, returnQuantizedTensor=args.save_quantized_tensors, outliers=args.outliers)
+                # set quantizer bits
+                # hardcode sensitive tensors quantize to 8 bits
+                # if i == 1 and name == "mlp.down_proj":
+                #     print ("quantize to 8 bits")
+                #     gptq[name].quantizer.configure(8, perchannel=True, sym=args.sym, mse=False)
+                # else:
                 gptq[name].quantizer.configure(args.wbits, perchannel=True, sym=args.sym, mse=False)
 
             def add_batch(name):
@@ -111,8 +120,16 @@ def llama_sequential(model, dataloader, dev):
                 h.remove()
 
             for name in subset:
-                scale, zero, g_idx, error = gptq[name].fasterquant(percdamp=args.percdamp, groupsize=args.groupsize, actorder=args.act_order, name=name)
-                quantizers['model.layers.%d.%s' % (i, name)] = (gptq[name].quantizer.cpu(), scale.cpu(), zero.cpu(), g_idx.cpu(), args.wbits, args.groupsize)
+                if not args.dynbits:
+                    scale, zero, g_idx, error, Q, cur_tensor_bits = gptq[name].fasterquant(percdamp=args.percdamp, groupsize=args.groupsize, actorder=args.act_order, name=name)
+                else:
+                    scale, zero, g_idx, error, Q, cur_static_bits, cur_dyn_bits = gptq[name].fasterquant_dynbits(percdamp=args.percdamp, groupsize=args.groupsize, actorder=args.act_order, name=name)
+
+                # print ("layer {} tensor {} bits {}".format (i, name, cur_tensor_bits))
+                quantizers['model.layers.%d.%s' % (i, name)] = (gptq[name].quantizer.cpu(), scale.cpu(), zero.cpu(), g_idx.cpu(), Q.cpu(), args.wbits, args.groupsize)
+                if args.dynbits:
+                    orig_bits += cur_static_bits
+                    dyn_bits += cur_dyn_bits
 
                 if args.observe:
                     observer.submit(name=name, layerid=i, gptq=gptq[name], error=error)
@@ -129,7 +146,13 @@ def llama_sequential(model, dataloader, dev):
 
         inps, outs = outs, inps
         print('+------------------+--------------+------------+-----------+-------+')
+        if args.dynbits:
+            print ("orig_bits: ", orig_bits)
+            print ("dyn_bits: ", dyn_bits)
         print('\n')
+
+        # TEST ONLY!
+        break
 
     if args.observe:
         observer.print()
@@ -155,10 +178,10 @@ def llama_sequential(model, dataloader, dev):
 
                 gptq.quantizer.configure(wbits, perchannel=True, sym=args.sym, mse=False)
 
-                scale, zero, g_idx, error = gptq.fasterquant(percdamp=args.percdamp, groupsize=groupsize, actorder=args.act_order, name=name)
-
+                scale, zero, g_idx, error, Q, cur_tensor_bits = gptq.fasterquant(percdamp=args.percdamp, groupsize=groupsize, actorder=args.act_order, name=name)
+                
                 table.add_row([wbits, groupsize, error])
-                quantizers['model.layers.%d.%s' % (layerid, name)] = (gptq.quantizer.cpu(), scale.cpu(), zero.cpu(), g_idx.cpu(), wbits, groupsize)
+                quantizers['model.layers.%d.%s' % (layerid, name)] = (gptq.quantizer.cpu(), scale.cpu(), zero.cpu(), g_idx.cpu(), Q.cpu(), wbits, groupsize)
 
             print(table.draw())
             print('\n')
@@ -169,10 +192,233 @@ def llama_sequential(model, dataloader, dev):
 
     return quantizers
 
+@torch.no_grad()
+def llama_single_tensor_quant_benchmark(layer_idx, tensor_name, dataloader, dev):
+    model = get_llama(args.model)
+    model.eval()
+    # layers = model.model.layers
+
+    datasets = ['wikitext2', 'ptb', 'c4']
+    if args.new_eval:
+        datasets = ['wikitext2', 'ptb-new', 'c4-new']
+
+    # get quant list
+    # quant_list = []
+    # for i in range(len(layers)):
+    #     layer = layers[i].to(dev)
+    #     full = find_layers(layer)
+    #     if args.true_sequential:
+    #         sequential = [['self_attn.k_proj', 'self_attn.v_proj', 'self_attn.q_proj'], ['self_attn.o_proj'], ['mlp.up_proj', 'mlp.gate_proj'], ['mlp.down_proj']]
+    #     else:
+    #         sequential = [list(full.keys())]
+    #     for names in sequential:
+    #         subset = {n: full[n] for n in names}
+    #         for name in subset:
+    #             quant_list.append ((name, i))
+    
+    # print (quant_list)
+
+    testloaders = []
+    for dataset in datasets:
+        _, testloader = get_loaders(dataset, seed=args.seed, model=args.model, seqlen=model.seqlen)
+        testloaders.append (testloader)
+
+    print('Ready.')
+
+    print ("layer_idx: ", layer_idx)
+    print ("tensor_name: ", tensor_name)
+
+    # for quant_idx in range (len (quant_list)):
+        # print (quant_list[quant_idx][1], quant_list[quant_idx][0])
+    model = get_llama(args.model)
+    model.eval()
+
+    use_cache = model.config.use_cache
+    model.config.use_cache = False
+    layers = model.model.layers
+
+    model.model.embed_tokens = model.model.embed_tokens.to(dev)
+    model.model.norm = model.model.norm.to(dev)
+    layers[0] = layers[0].to(dev)
+
+    dtype = next(iter(model.parameters())).dtype
+    inps = torch.zeros((args.nsamples, model.seqlen, model.config.hidden_size), dtype=dtype, device=dev)
+    cache = {'i': 0, 'attention_mask': None}
+
+    class Catcher(nn.Module):
+
+        def __init__(self, module):
+            super().__init__()
+            self.module = module
+
+        def forward(self, inp, **kwargs):
+            inps[cache['i']] = inp
+            cache['i'] += 1
+            cache['attention_mask'] = kwargs['attention_mask']
+            cache['position_ids'] = kwargs['position_ids']
+            raise ValueError
+
+    layers[0] = Catcher(layers[0])
+    for batch in dataloader:
+        try:
+            model(batch[0].to(dev))
+        except ValueError:
+            pass
+    layers[0] = layers[0].module
+
+    layers[0] = layers[0].cpu()
+    model.model.embed_tokens = model.model.embed_tokens.cpu()
+    model.model.norm = model.model.norm.cpu()
+    torch.cuda.empty_cache()
+
+    outs = torch.zeros_like(inps)
+    attention_mask = cache['attention_mask']
+    position_ids = cache['position_ids']
+
+    use_cache = model.config.use_cache
+    model.config.use_cache = False
+    layers = model.model.layers
+
+    model.model.embed_tokens = model.model.embed_tokens.to(dev)
+    model.model.norm = model.model.norm.to(dev)
+    layers[0] = layers[0].to(dev)
+
+    quantizers = {}
+    for i in range(len(layers)):
+        layer = layers[i].to(dev)
+        full = find_layers(layer)
+        if args.true_sequential:
+            sequential = [['self_attn.k_proj', 'self_attn.v_proj', 'self_attn.q_proj'], ['self_attn.o_proj'], ['mlp.up_proj', 'mlp.gate_proj'], ['mlp.down_proj']]
+        else:
+            sequential = [list(full.keys())]
+
+        for names in sequential:
+            subset = {n: full[n] for n in names}
+            gptq = {}
+            for name in subset:
+                if i == layer_idx and name == tensor_name:
+                    gptq[name] = GPTQ(subset[name], observe=args.observe, returnQuantizedTensor=args.save_quantized_tensors, outliers=args.outliers)
+                    # set quantizer bits
+                    gptq[name].quantizer.configure(args.wbits, perchannel=True, sym=args.sym, mse=False)
+
+            def add_batch(name):
+
+                def tmp(_, inp, out):
+                    gptq[name].add_batch(inp[0].data, out.data)
+
+                return tmp
+
+            handles = []
+            for name in subset:
+                if i == layer_idx and name == tensor_name:
+                    handles.append(subset[name].register_forward_hook(add_batch(name)))
+            for j in range(args.nsamples):
+                outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+            for h in handles:
+                h.remove()
+
+            for name in subset:
+                if i == layer_idx and name == tensor_name:
+                    scale, zero, g_idx, error, Q, cur_tensor_bits = gptq[name].fasterquant(percdamp=args.percdamp, groupsize=args.groupsize, actorder=args.act_order, name=name)
+                    quantizers['model.layers.%d.%s' % (i, name)] = (gptq[name].quantizer.cpu(), scale.cpu(), zero.cpu(), g_idx.cpu(), Q.cpu(), args.wbits, args.groupsize)
+
+                    gptq[name].free()
+
+        for j in range(args.nsamples):
+            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+
+        layers[i] = layer.cpu()
+        del layer
+        del gptq
+        torch.cuda.empty_cache()
+
+        inps, outs = outs, inps
+
+    # print (quantizers)
+    llama_pack_origvalues (model, quantizers)
+    for dataset_idx in range (len (datasets)):
+        print (datasets[dataset_idx])
+        llama_eval(model, testloaders[dataset_idx], DEV)
+
+    model.config.use_cache = use_cache
+
+@torch.no_grad()
+def llama_single_tensor_quant_benchmark_woGPTQ(layer_idx, tensor_name, dataloader, dev):
+    model = get_llama(args.model)
+    model.eval()
+    
+    datasets = ['wikitext2', 'ptb', 'c4']
+    if args.new_eval:
+        datasets = ['wikitext2', 'ptb-new', 'c4-new']
+
+    testloaders = []
+    for dataset in datasets:
+        _, testloader = get_loaders(dataset, seed=args.seed, model=args.model, seqlen=model.seqlen)
+        testloaders.append (testloader)
+
+    print('Ready.')
+
+    print ("layer_idx: ", layer_idx)
+    print ("tensor_name: ", tensor_name)
+
+    model = get_llama(args.model)
+    model.eval()
+
+    layers = model.model.layers
+    torch.cuda.empty_cache()
+
+    quantizers = {}
+    for i in range(len(layers)):
+        layer = layers[i].to(dev)
+        full = find_layers(layer)
+        if args.true_sequential:
+            sequential = [['self_attn.k_proj', 'self_attn.v_proj', 'self_attn.q_proj'], ['self_attn.o_proj'], ['mlp.up_proj', 'mlp.gate_proj'], ['mlp.down_proj']]
+        else:
+            sequential = [list(full.keys())]
+
+        for names in sequential:
+            subset = {n: full[n] for n in names}
+            # gptq = {}
+            quants = {}
+            for name in subset:
+                if i == layer_idx and name == tensor_name:
+                    # gptq[name] = GPTQ(subset[name], observe=args.observe, returnQuantizedTensor=args.save_quantized_tensors, outliers=args.outliers)
+                    # set quantizer bits
+                    # gptq[name].quantizer.configure(args.wbits, perchannel=True, sym=args.sym, mse=False)
+                    quants[name] = quant.Quantizer()
+                    quants[name].configure(args.wbits, perchannel=True, sym=args.sym, mse=False)
+
+            for name in subset:
+                if i == layer_idx and name == tensor_name:
+                    # scale, zero, g_idx, error, Q = gptq[name].fasterquant(percdamp=args.percdamp, groupsize=args.groupsize, actorder=args.act_order, name=name)
+                    # quantizers['model.layers.%d.%s' % (i, name)] = (gptq[name].quantizer.cpu(), scale.cpu(), zero.cpu(), g_idx.cpu(), Q.cpu(), args.wbits, args.groupsize)
+
+                    # gptq[name].free()
+                    W = subset[name].weight.data.clone()
+                    W = W.float()
+                    Q = torch.zeros_like (W)
+                    for j in range (0, W.shape[1], args.groupsize):
+                        quants[name].find_params(W[:, j:j + args.groupsize], weight=True)
+                        for k in range (0, args.groupsize):
+                            w = W[:, j + k]
+                            q = quants[name].quantize(w.unsqueeze(1)).flatten()
+                            Q[:, j + k] = q
+                    quantizers['model.layers.%d.%s' % (i, name)] = (0, 0, 0, 0, Q.cpu(), args.wbits, args.groupsize)
+
+        del layer
+        del quants
+        torch.cuda.empty_cache()
+
+    print (quantizers)
+    llama_pack_origvalues (model, quantizers)
+    for dataset_idx in range (len (datasets)):
+        print (datasets[dataset_idx])
+        llama_eval(model, testloaders[dataset_idx], DEV)
+
 
 @torch.no_grad()
 def llama_eval(model, testenc, dev):
-    print('Evaluating ...')
+    # print('Evaluating ...')
 
     testenc = testenc.input_ids
     nsamples = testenc.numel() // model.seqlen
@@ -219,7 +465,7 @@ def llama_eval(model, testenc, dev):
     position_ids = cache['position_ids']
 
     for i in range(len(layers)):
-        print(i)
+        # print(i)
         layer = layers[i].to(dev)
 
         if args.nearest:
@@ -256,7 +502,7 @@ def llama_eval(model, testenc, dev):
         neg_log_likelihood = loss.float() * model.seqlen
         nlls.append(neg_log_likelihood)
     ppl = torch.exp(torch.stack(nlls).sum() / (nsamples * model.seqlen))
-    print(ppl.item())
+    print("PPL: ", ppl.item())
 
     model.config.use_cache = use_cache
 
@@ -270,11 +516,17 @@ def llama_pack(model, quantizers, wbits, groupsize):
     print('Packing ...')
     for name in qlayers:
         print(name)
-        quantizers[name], scale, zero, g_idx, _, _ = quantizers[name]
+        quantizers[name], scale, zero, g_idx, _, _, _ = quantizers[name]
         qlayers[name].pack(layers[name], scale, zero, g_idx)
     print('Done.')
     return model
 
+def llama_pack_origvalues (model, quantizers):
+    layers = find_layers(model)
+    # print('Saving ...')
+    update_layer_tensors (model, quantizers)
+    # print ('Done.')
+    return model
 
 def load_quant(model, checkpoint, wbits, groupsize=-1, fused_mlp=True, eval=True, warmup_autotune=True):
     from transformers import LlamaConfig, LlamaForCausalLM, modeling_utils
@@ -324,6 +576,37 @@ def load_quant(model, checkpoint, wbits, groupsize=-1, fused_mlp=True, eval=True
 
     return model
 
+def load_quantized_tensors (model, checkpoint):
+    from transformers import LlamaConfig, LlamaForCausalLM, modeling_utils
+    config = LlamaConfig.from_pretrained(model)
+
+    def noop(*args, **kwargs):
+        pass
+
+    torch.nn.init.kaiming_uniform_ = noop
+    torch.nn.init.uniform_ = noop
+    torch.nn.init.normal_ = noop
+
+    torch.set_default_dtype(torch.half)
+    modeling_utils._init_weights = False
+    torch.set_default_dtype(torch.half)
+    model = LlamaForCausalLM(config)
+    torch.set_default_dtype(torch.float)
+    if eval:
+        model = model.eval()
+
+    print('Loading model ...')
+    if checkpoint.endswith('.safetensors'):
+        from safetensors.torch import load_file as safe_load
+        model.load_state_dict(safe_load(checkpoint))
+    else:
+        model.load_state_dict(torch.load(checkpoint))
+
+    model.seqlen = 2048
+    print('Done.')
+
+    return model
+    
 
 def llama_multigpu(model, gpus, gpu_dist):
     model.model.embed_tokens = model.model.embed_tokens.to(gpus[0])
@@ -437,6 +720,31 @@ def benchmark(model, input_ids, check=False):
             print('PPL:', torch.exp(tot / (input_ids.numel() - 1)).item())
             print('max memory(MiB):', max_memory)
 
+tensor_names = ["self_attn.q_proj", "self_attn.k_proj", "self_attn.v_proj", "self_attn.o_proj", "mlp.up_proj", "mlp.down_proj", "mlp.gate_proj"]
+benchmarks = ["wikitext2", "ptb", "c4"]
+bits = [2, 3, 4, 8]
+
+def getResult (bit):
+    path = "/home/v-wentaoni/workspace/amlt/gptq_per_tensor_{}bit".format (bit)
+
+    result = {"wikitext2": np.zeros ((32, 7)), "ptb": np.zeros ((32, 7)), "c4": np.zeros((32, 7))}
+    for job in range (14):
+        cur_folder_path = path + "/sparsellm_job" + str (job)
+        file_names = os.listdir (cur_folder_path)
+        for file_name in file_names:
+            if file_name == "logs":
+                continue
+            tmp = file_name.split ('.')
+            layer_id = int (tmp[0].split ('_')[-1])
+            tensor_name = tmp[1] + '.' + tmp[2]
+            with open (cur_folder_path + "/" + file_name, 'r') as f:
+                lines = f.readlines ()
+                for i in range (len (lines)):
+                    lines[i] = lines[i].strip()
+                    if lines[i] in benchmarks:
+                        # print (lines[i], float (lines[i + 1].strip()[5:]))
+                        result[lines[i]][layer_id][tensor_names.index (tensor_name)] = float (lines[i + 1].strip()[5:])
+    return result
 
 if __name__ == '__main__':
 
@@ -468,24 +776,45 @@ if __name__ == '__main__':
                         help='Auto upgrade layer precision to higher precision, for example int2 to int4, groupsize 128 to 64. \
             When this feature enabled, `--save` or `--save_safetensors` would be disable.')
     parser.add_argument('--quant-directory', type=str, default=None, help='Specify the directory for export quantization parameters to toml format. `None` means no export by default.')
+    parser.add_argument('--dynbits', action='store_true', help='Whether to use dynamic bits.')
+    parser.add_argument('--save-quantized-tensors', action='store_true', help='Whether to save quantized tensors.')
+    parser.add_argument('--load-quantized-tensors', type=str, default='', help='Whether to load quantized tensors.')
+    parser.add_argument('--outliers', action='store_true', help='Whether to quantize without outliers.')
+    parser.add_argument('--threshold', type=float, default=-1, help='Threshold for delta PPL.')
+    parser.add_argument('--single-tensor-quant-benchmark', action='store_true', help='Whether to perform single tensor quant benchmarking.')
+    parser.add_argument('--single-tensor-quant-benchmark-woGPTQ', action='store_true', help='Whether to perform single tensor quant benchmarking without GPTQ.')
+
+    # single tensor quantization benchmark
+    parser.add_argument('--layer-idx', type=int, default=0, help='Layer index for single tensor quant benchmarking.')
+    parser.add_argument('--tensor-name', type=str, default='self_attn.k_proj', help='Tensor name for single tensor quant benchmarking.')
 
     args = parser.parse_args()
+
+    dataloader, testloader = get_loaders(args.dataset, nsamples=args.nsamples, seed=args.seed, model=args.model, seqlen=2048)
 
     if args.layers_dist:
         gpu_dist = [int(x) for x in args.layers_dist.split(':')]
     else:
         gpu_dist = []
 
+    if args.single_tensor_quant_benchmark:
+        llama_single_tensor_quant_benchmark (args.layer_idx, args.tensor_name, dataloader, DEV)
+        exit (0)
+    
+    if args.single_tensor_quant_benchmark_woGPTQ:
+        llama_single_tensor_quant_benchmark_woGPTQ (args.layer_idx, args.tensor_name, dataloader, DEV)
+        exit (0)
+
     if type(args.load) is not str:
         args.load = args.load.as_posix()
 
     if args.load:
         model = load_quant(args.model, args.load, args.wbits, args.groupsize)
+    elif args.load_quantized_tensors:
+        model = load_quantized_tensors (args.model, args.load_quantized_tensors)
     else:
         model = get_llama(args.model)
         model.eval()
-
-    dataloader, testloader = get_loaders(args.dataset, nsamples=args.nsamples, seed=args.seed, model=args.model, seqlen=model.seqlen)
 
     if not args.load and args.wbits < 16 and not args.nearest:
         tick = time.time()
@@ -501,15 +830,6 @@ if __name__ == '__main__':
         if args.benchmark:
             input_ids = next(iter(dataloader))[0][:, :args.benchmark]
             benchmark(model, input_ids, check=args.check)
-
-    if args.eval:
-        datasets = ['wikitext2', 'ptb', 'c4']
-        if args.new_eval:
-            datasets = ['wikitext2', 'ptb-new', 'c4-new']
-        for dataset in datasets:
-            dataloader, testloader = get_loaders(dataset, seed=args.seed, model=args.model, seqlen=model.seqlen)
-            print(dataset)
-            llama_eval(model, testloader, DEV)
     
     if args.test_generation:
         gpus = [torch.device('cuda:%d' % i) for i in range(torch.cuda.device_count())]
@@ -524,14 +844,16 @@ if __name__ == '__main__':
         streamer = TextStreamer(tokenizer)
         with torch.no_grad():
             generated_ids = model.generate(input_ids, streamer=streamer)
-        
-
 
     if args.quant_directory is not None:
         export_quant_table(quantizers, args.quant_directory)
 
     if not args.observe and args.save:
-        llama_pack(model, quantizers, args.wbits, args.groupsize)
+        if not args.save_quantized_tensors:
+            llama_pack(model, quantizers, args.wbits, args.groupsize)
+        else:
+            print ("save quantized tensors.")
+            llama_pack_origvalues (model, quantizers)
         torch.save(model.state_dict(), args.save)
 
     if not args.observe and args.save_safetensors:
@@ -540,3 +862,12 @@ if __name__ == '__main__':
         state_dict = model.state_dict()
         state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
         safe_save(state_dict, args.save_safetensors)
+
+    if args.eval:
+        datasets = ['wikitext2', 'ptb', 'c4']
+        if args.new_eval:
+            datasets = ['wikitext2', 'ptb-new', 'c4-new']
+        for dataset in datasets:
+            dataloader, testloader = get_loaders(dataset, seed=args.seed, model=args.model, seqlen=model.seqlen)
+            print(dataset)
+            llama_eval(model, testloader, DEV)

@@ -6,14 +6,15 @@ import math
 
 class Quantizer(nn.Module):
 
-    def __init__(self, shape=1):
+    def __init__(self, shape=1, outliers=False):
         super(Quantizer, self).__init__()
         self.register_buffer('maxq', torch.tensor(0))
         self.register_buffer('scale', torch.zeros(shape))
         self.register_buffer('zero', torch.zeros(shape))
+        self.outliers = outliers
 
     def configure(self, bits, perchannel=False, sym=True, mse=False, norm=2.4, grid=100, maxshrink=.8, trits=False):
-
+        self.bits = bits
         self.maxq = torch.tensor(2**bits - 1)
         self.perchannel = perchannel
         self.sym = sym
@@ -24,6 +25,28 @@ class Quantizer(nn.Module):
         if trits:
             self.maxq = torch.tensor(-1)
         self.scale = torch.zeros_like(self.scale)
+        self.outlier_min = torch.zeros_like (self.scale).fill_(float('inf'))
+        self.outlier_max = torch.zeros_like (self.scale).fill_(-float('inf'))
+
+    def change_bits (self, bits):
+        self.bits = bits
+        self.maxq = torch.tensor (2**bits - 1)
+
+    def _quantize_without_outliers (self, x, scale, zero, maxq):
+        mask = (x < self.outlier_min) | (x > self.outlier_max)
+        outliers = mask * x
+        x_without_outlier = x.clone()
+        # x_without_outlier = torch.clamp(x, self.outlier_min, self.outlier_max)
+        if maxq < 0:
+            res = (x_without_outlier > scale / 2).float() * scale + (x_without_outlier < zero / 2).float() * zero
+            res[mask] = 0
+            res += outliers
+            return res
+        q = torch.clamp(torch.round(x / scale) + zero, 0, maxq)
+        res = scale * (q - zero)
+        res[mask] = 0
+        res += outliers
+        return res
 
     def _quantize(self, x, scale, zero, maxq):
         if maxq < 0:
@@ -34,6 +57,10 @@ class Quantizer(nn.Module):
     def find_params(self, x, weight=False):
         dev = x.device
         self.maxq = self.maxq.to(dev)
+        self.outlier_min = torch.zeros_like (self.scale).fill_(float('inf'))
+        self.outlier_max = torch.zeros_like (self.scale).fill_(-float('inf'))
+        self.outlier_min = self.outlier_min.to(dev)
+        self.outlier_max = self.outlier_max.to(dev)
 
         shape = x.shape
         if self.perchannel:
@@ -53,6 +80,16 @@ class Quantizer(nn.Module):
         tmp = torch.zeros(x.shape[0], device=dev)
         xmin = torch.minimum(x.min(1)[0], tmp)
         xmax = torch.maximum(x.max(1)[0], tmp)
+
+        if self.outliers:
+            row_means = torch.mean (x, dim=1)
+            row_stds = torch.std (x, dim=1)
+            self.outlier_min = self.outlier_min.squeeze ()
+            self.outlier_max = self.outlier_max.squeeze ()
+            self.outlier_min = torch.minimum (self.outlier_min, row_means - 3 * row_stds)
+            self.outlier_max = torch.maximum (self.outlier_max, row_means + 3 * row_stds)
+            xmin = torch.maximum (xmin, self.outlier_min)
+            xmax = torch.minimum (xmax, self.outlier_max)
 
         if self.sym:
             xmax = torch.maximum(torch.abs(xmin), xmax)
@@ -103,20 +140,31 @@ class Quantizer(nn.Module):
             shape = [-1] + [1] * (len(shape) - 1)
             self.scale = self.scale.reshape(shape)
             self.zero = self.zero.reshape(shape)
+            self.outlier_min = self.outlier_min.reshape(shape)
+            self.outlier_max = self.outlier_max.reshape(shape)
             return
         if len(shape) == 4:
             self.scale = self.scale.reshape((1, -1, 1, 1))
             self.zero = self.zero.reshape((1, -1, 1, 1))
+            self.outlier_min = self.outlier_min.reshape((1, -1, 1, 1))
+            self.outlier_max = self.outlier_max.reshape((1, -1, 1, 1))
         if len(shape) == 3:
             self.scale = self.scale.reshape((1, 1, -1))
             self.zero = self.zero.reshape((1, 1, -1))
+            self.outlier_min = self.outlier_min.reshape((1, 1, -1))
+            self.outlier_max = self.outlier_max.reshape((1, 1, -1))
         if len(shape) == 2:
             self.scale = self.scale.unsqueeze(0)
             self.zero = self.zero.unsqueeze(0)
+            self.outlier_min = self.outlier_min.unsqueeze(0)
+            self.outlier_max = self.outlier_max.unsqueeze(0)
 
     def quantize(self, x):
         if self.ready():
-            return self._quantize(x, self.scale, self.zero, self.maxq)
+            if not self.outliers:            
+                return self._quantize(x, self.scale, self.zero, self.maxq)
+            else:
+                return self._quantize_without_outliers (x, self.scale, self.zero, self.maxq)
 
         return x
 

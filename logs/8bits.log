@@ -1,0 +1,677 @@
+Starting ...
+Ready.
+Quantizing layer 1/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 0.629        | -          | -         | 1.736 |
+| self_attn.v_proj | 0.027        | -          | -         | 1.282 |
+| self_attn.q_proj | 0.704        | -          | -         | 1.247 |
+| self_attn.o_proj | 0.000        | -          | -         | 1.477 |
+| mlp.up_proj      | 0.502        | -          | -         | 1.547 |
+| mlp.gate_proj    | 0.519        | -          | -         | 1.252 |
+| mlp.down_proj    | 0.004        | -          | -         | 4.286 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 2/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 2.709        | -          | -         | 1.583 |
+| self_attn.v_proj | 0.150        | -          | -         | 1.241 |
+| self_attn.q_proj | 2.667        | -          | -         | 1.230 |
+| self_attn.o_proj | 0.017        | -          | -         | 1.489 |
+| mlp.up_proj      | 2.043        | -          | -         | 1.546 |
+| mlp.gate_proj    | 2.290        | -          | -         | 1.242 |
+| mlp.down_proj    | 1.736        | -          | -         | 4.328 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 3/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 8.805        | -          | -         | 1.584 |
+| self_attn.v_proj | 2.251        | -          | -         | 1.243 |
+| self_attn.q_proj | 8.054        | -          | -         | 1.224 |
+| self_attn.o_proj | 0.037        | -          | -         | 1.469 |
+| mlp.up_proj      | 5.531        | -          | -         | 1.536 |
+| mlp.gate_proj    | 6.332        | -          | -         | 1.250 |
+| mlp.down_proj    | 0.118        | -          | -         | 4.343 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 4/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 27.735       | -          | -         | 1.562 |
+| self_attn.v_proj | 7.370        | -          | -         | 1.244 |
+| self_attn.q_proj | 26.252       | -          | -         | 1.263 |
+| self_attn.o_proj | 0.066        | -          | -         | 1.496 |
+| mlp.up_proj      | 10.444       | -          | -         | 1.557 |
+| mlp.gate_proj    | 12.139       | -          | -         | 1.240 |
+| mlp.down_proj    | 0.254        | -          | -         | 4.348 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 5/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 27.318       | -          | -         | 1.595 |
+| self_attn.v_proj | 7.580        | -          | -         | 1.251 |
+| self_attn.q_proj | 26.517       | -          | -         | 1.260 |
+| self_attn.o_proj | 0.124        | -          | -         | 1.512 |
+| mlp.up_proj      | 14.075       | -          | -         | 1.565 |
+| mlp.gate_proj    | 17.286       | -          | -         | 1.239 |
+| mlp.down_proj    | 0.469        | -          | -         | 4.351 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 6/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 33.400       | -          | -         | 1.598 |
+| self_attn.v_proj | 9.327        | -          | -         | 1.245 |
+| self_attn.q_proj | 30.783       | -          | -         | 1.256 |
+| self_attn.o_proj | 0.235        | -          | -         | 1.514 |
+| mlp.up_proj      | 17.730       | -          | -         | 1.579 |
+| mlp.gate_proj    | 22.021       | -          | -         | 1.239 |
+| mlp.down_proj    | 0.707        | -          | -         | 4.368 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 7/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 47.066       | -          | -         | 1.594 |
+| self_attn.v_proj | 13.362       | -          | -         | 1.235 |
+| self_attn.q_proj | 45.749       | -          | -         | 1.246 |
+| self_attn.o_proj | 0.286        | -          | -         | 1.491 |
+| mlp.up_proj      | 21.864       | -          | -         | 1.558 |
+| mlp.gate_proj    | 28.289       | -          | -         | 1.211 |
+| mlp.down_proj    | 1.029        | -          | -         | 4.364 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 8/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 50.396       | -          | -         | 1.552 |
+| self_attn.v_proj | 15.125       | -          | -         | 1.251 |
+| self_attn.q_proj | 49.930       | -          | -         | 1.246 |
+| self_attn.o_proj | 0.407        | -          | -         | 1.480 |
+| mlp.up_proj      | 25.500       | -          | -         | 1.587 |
+| mlp.gate_proj    | 32.742       | -          | -         | 1.268 |
+| mlp.down_proj    | 1.372        | -          | -         | 4.385 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 9/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 50.841       | -          | -         | 1.579 |
+| self_attn.v_proj | 15.649       | -          | -         | 1.223 |
+| self_attn.q_proj | 50.055       | -          | -         | 1.227 |
+| self_attn.o_proj | 0.613        | -          | -         | 1.462 |
+| mlp.up_proj      | 28.043       | -          | -         | 1.578 |
+| mlp.gate_proj    | 34.044       | -          | -         | 1.235 |
+| mlp.down_proj    | 1.667        | -          | -         | 4.356 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 10/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 56.470       | -          | -         | 1.543 |
+| self_attn.v_proj | 17.411       | -          | -         | 1.204 |
+| self_attn.q_proj | 53.698       | -          | -         | 1.219 |
+| self_attn.o_proj | 0.886        | -          | -         | 1.500 |
+| mlp.up_proj      | 30.890       | -          | -         | 1.576 |
+| mlp.gate_proj    | 36.281       | -          | -         | 1.254 |
+| mlp.down_proj    | 1.977        | -          | -         | 4.340 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 11/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 59.758       | -          | -         | 1.576 |
+| self_attn.v_proj | 18.025       | -          | -         | 1.224 |
+| self_attn.q_proj | 55.608       | -          | -         | 1.223 |
+| self_attn.o_proj | 1.200        | -          | -         | 1.522 |
+| mlp.up_proj      | 33.004       | -          | -         | 1.558 |
+| mlp.gate_proj    | 37.793       | -          | -         | 1.248 |
+| mlp.down_proj    | 2.285        | -          | -         | 4.394 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 12/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 62.468       | -          | -         | 1.613 |
+| self_attn.v_proj | 24.269       | -          | -         | 1.265 |
+| self_attn.q_proj | 62.513       | -          | -         | 1.266 |
+| self_attn.o_proj | 1.215        | -          | -         | 1.507 |
+| mlp.up_proj      | 36.690       | -          | -         | 1.578 |
+| mlp.gate_proj    | 41.016       | -          | -         | 1.285 |
+| mlp.down_proj    | 2.618        | -          | -         | 4.340 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 13/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 70.287       | -          | -         | 1.578 |
+| self_attn.v_proj | 24.057       | -          | -         | 1.252 |
+| self_attn.q_proj | 65.830       | -          | -         | 1.249 |
+| self_attn.o_proj | 1.378        | -          | -         | 1.495 |
+| mlp.up_proj      | 40.067       | -          | -         | 1.585 |
+| mlp.gate_proj    | 43.403       | -          | -         | 1.258 |
+| mlp.down_proj    | 3.059        | -          | -         | 4.409 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 14/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 70.253       | -          | -         | 1.568 |
+| self_attn.v_proj | 26.882       | -          | -         | 1.239 |
+| self_attn.q_proj | 67.332       | -          | -         | 1.248 |
+| self_attn.o_proj | 1.556        | -          | -         | 1.463 |
+| mlp.up_proj      | 43.228       | -          | -         | 1.603 |
+| mlp.gate_proj    | 45.598       | -          | -         | 1.245 |
+| mlp.down_proj    | 3.836        | -          | -         | 4.380 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 15/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 72.856       | -          | -         | 1.576 |
+| self_attn.v_proj | 26.807       | -          | -         | 1.231 |
+| self_attn.q_proj | 69.240       | -          | -         | 1.279 |
+| self_attn.o_proj | 1.934        | -          | -         | 1.493 |
+| mlp.up_proj      | 47.804       | -          | -         | 1.573 |
+| mlp.gate_proj    | 50.110       | -          | -         | 1.260 |
+| mlp.down_proj    | 4.586        | -          | -         | 4.394 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 16/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 71.129       | -          | -         | 1.571 |
+| self_attn.v_proj | 28.169       | -          | -         | 1.221 |
+| self_attn.q_proj | 66.669       | -          | -         | 1.209 |
+| self_attn.o_proj | 2.164        | -          | -         | 1.487 |
+| mlp.up_proj      | 52.204       | -          | -         | 1.586 |
+| mlp.gate_proj    | 54.665       | -          | -         | 1.296 |
+| mlp.down_proj    | 5.744        | -          | -         | 4.427 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 17/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 72.912       | -          | -         | 1.597 |
+| self_attn.v_proj | 32.242       | -          | -         | 1.247 |
+| self_attn.q_proj | 68.714       | -          | -         | 1.247 |
+| self_attn.o_proj | 2.898        | -          | -         | 1.496 |
+| mlp.up_proj      | 58.108       | -          | -         | 1.566 |
+| mlp.gate_proj    | 61.726       | -          | -         | 1.274 |
+| mlp.down_proj    | 7.590        | -          | -         | 4.510 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 18/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 74.536       | -          | -         | 1.564 |
+| self_attn.v_proj | 33.865       | -          | -         | 1.237 |
+| self_attn.q_proj | 70.678       | -          | -         | 1.218 |
+| self_attn.o_proj | 2.136        | -          | -         | 1.497 |
+| mlp.up_proj      | 66.242       | -          | -         | 1.556 |
+| mlp.gate_proj    | 72.285       | -          | -         | 1.255 |
+| mlp.down_proj    | 8.579        | -          | -         | 4.466 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 19/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 80.625       | -          | -         | 1.583 |
+| self_attn.v_proj | 42.090       | -          | -         | 1.270 |
+| self_attn.q_proj | 76.989       | -          | -         | 1.240 |
+| self_attn.o_proj | 2.359        | -          | -         | 1.509 |
+| mlp.up_proj      | 73.801       | -          | -         | 1.542 |
+| mlp.gate_proj    | 82.475       | -          | -         | 1.269 |
+| mlp.down_proj    | 10.233       | -          | -         | 4.468 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 20/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 77.894       | -          | -         | 1.592 |
+| self_attn.v_proj | 42.254       | -          | -         | 1.279 |
+| self_attn.q_proj | 74.703       | -          | -         | 1.258 |
+| self_attn.o_proj | 2.298        | -          | -         | 1.517 |
+| mlp.up_proj      | 79.516       | -          | -         | 1.549 |
+| mlp.gate_proj    | 89.488       | -          | -         | 1.248 |
+| mlp.down_proj    | 11.491       | -          | -         | 4.373 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 21/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 79.909       | -          | -         | 1.600 |
+| self_attn.v_proj | 44.198       | -          | -         | 1.245 |
+| self_attn.q_proj | 76.802       | -          | -         | 1.236 |
+| self_attn.o_proj | 2.826        | -          | -         | 1.501 |
+| mlp.up_proj      | 83.185       | -          | -         | 1.612 |
+| mlp.gate_proj    | 94.701       | -          | -         | 1.288 |
+| mlp.down_proj    | 13.455       | -          | -         | 4.459 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 22/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 82.858       | -          | -         | 1.593 |
+| self_attn.v_proj | 51.741       | -          | -         | 1.279 |
+| self_attn.q_proj | 81.150       | -          | -         | 1.267 |
+| self_attn.o_proj | 2.508        | -          | -         | 1.515 |
+| mlp.up_proj      | 88.846       | -          | -         | 1.598 |
+| mlp.gate_proj    | 102.915      | -          | -         | 1.302 |
+| mlp.down_proj    | 14.009       | -          | -         | 4.516 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 23/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 89.414       | -          | -         | 1.633 |
+| self_attn.v_proj | 53.667       | -          | -         | 1.294 |
+| self_attn.q_proj | 87.198       | -          | -         | 1.281 |
+| self_attn.o_proj | 3.227        | -          | -         | 1.552 |
+| mlp.up_proj      | 93.409       | -          | -         | 1.561 |
+| mlp.gate_proj    | 109.625      | -          | -         | 1.304 |
+| mlp.down_proj    | 15.866       | -          | -         | 4.485 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 24/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 97.048       | -          | -         | 1.592 |
+| self_attn.v_proj | 65.984       | -          | -         | 1.288 |
+| self_attn.q_proj | 96.001       | -          | -         | 1.277 |
+| self_attn.o_proj | 3.363        | -          | -         | 1.507 |
+| mlp.up_proj      | 101.150      | -          | -         | 1.602 |
+| mlp.gate_proj    | 117.473      | -          | -         | 1.306 |
+| mlp.down_proj    | 17.131       | -          | -         | 4.458 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 25/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 90.500       | -          | -         | 1.589 |
+| self_attn.v_proj | 63.523       | -          | -         | 1.254 |
+| self_attn.q_proj | 90.286       | -          | -         | 1.266 |
+| self_attn.o_proj | 3.420        | -          | -         | 1.535 |
+| mlp.up_proj      | 107.525      | -          | -         | 1.594 |
+| mlp.gate_proj    | 124.674      | -          | -         | 1.279 |
+| mlp.down_proj    | 18.306       | -          | -         | 4.467 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 26/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 105.100      | -          | -         | 1.611 |
+| self_attn.v_proj | 79.491       | -          | -         | 1.287 |
+| self_attn.q_proj | 105.727      | -          | -         | 1.252 |
+| self_attn.o_proj | 2.769        | -          | -         | 1.533 |
+| mlp.up_proj      | 115.974      | -          | -         | 1.577 |
+| mlp.gate_proj    | 134.012      | -          | -         | 1.305 |
+| mlp.down_proj    | 19.848       | -          | -         | 4.470 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 27/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 99.793       | -          | -         | 1.602 |
+| self_attn.v_proj | 78.833       | -          | -         | 1.302 |
+| self_attn.q_proj | 100.165      | -          | -         | 1.267 |
+| self_attn.o_proj | 4.651        | -          | -         | 1.541 |
+| mlp.up_proj      | 123.306      | -          | -         | 1.586 |
+| mlp.gate_proj    | 142.189      | -          | -         | 1.273 |
+| mlp.down_proj    | 21.973       | -          | -         | 4.441 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 28/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 109.530      | -          | -         | 1.585 |
+| self_attn.v_proj | 81.861       | -          | -         | 1.274 |
+| self_attn.q_proj | 109.253      | -          | -         | 1.260 |
+| self_attn.o_proj | 4.523        | -          | -         | 1.525 |
+| mlp.up_proj      | 132.144      | -          | -         | 1.600 |
+| mlp.gate_proj    | 151.185      | -          | -         | 1.291 |
+| mlp.down_proj    | 24.861       | -          | -         | 4.480 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 29/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 107.633      | -          | -         | 1.614 |
+| self_attn.v_proj | 90.022       | -          | -         | 1.271 |
+| self_attn.q_proj | 108.045      | -          | -         | 1.245 |
+| self_attn.o_proj | 5.817        | -          | -         | 1.553 |
+| mlp.up_proj      | 140.515      | -          | -         | 1.570 |
+| mlp.gate_proj    | 156.358      | -          | -         | 1.275 |
+| mlp.down_proj    | 29.550       | -          | -         | 4.432 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 30/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 94.498       | -          | -         | 1.556 |
+| self_attn.v_proj | 84.007       | -          | -         | 1.264 |
+| self_attn.q_proj | 98.159       | -          | -         | 1.229 |
+| self_attn.o_proj | 5.434        | -          | -         | 1.512 |
+| mlp.up_proj      | 146.611      | -          | -         | 1.579 |
+| mlp.gate_proj    | 161.206      | -          | -         | 1.250 |
+| mlp.down_proj    | 35.647       | -          | -         | 4.507 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 31/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 101.127      | -          | -         | 1.611 |
+| self_attn.v_proj | 92.918       | -          | -         | 1.265 |
+| self_attn.q_proj | 104.342      | -          | -         | 1.244 |
+| self_attn.o_proj | 6.728        | -          | -         | 1.532 |
+| mlp.up_proj      | 147.204      | -          | -         | 1.631 |
+| mlp.gate_proj    | 164.040      | -          | -         | 1.270 |
+| mlp.down_proj    | 55.319       | -          | -         | 4.370 |
++------------------+--------------+------------+-----------+-------+
+
+
+Quantizing layer 32/32..
++------------------+--------------+------------+-----------+-------+
+|       name       | weight_error | fp_inp_SNR | q_inp_SNR | time  |
++==================+==============+============+===========+=======+
+| self_attn.k_proj | 72.070       | -          | -         | 1.586 |
+| self_attn.v_proj | 50.790       | -          | -         | 1.269 |
+| self_attn.q_proj | 68.363       | -          | -         | 1.275 |
+| self_attn.o_proj | 7.101        | -          | -         | 1.497 |
+| mlp.up_proj      | 122.615      | -          | -         | 1.582 |
+| mlp.gate_proj    | 137.594      | -          | -         | 1.287 |
+| mlp.down_proj    | 101.560      | -          | -         | 4.386 |
++------------------+--------------+------------+-----------+-------+
+
+
+762.1083984375
+Packing ...
+model.layers.0.self_attn.k_proj
+model.layers.0.self_attn.o_proj
+model.layers.0.self_attn.q_proj
+model.layers.0.self_attn.v_proj
+model.layers.0.mlp.down_proj
+model.layers.0.mlp.gate_proj
+model.layers.0.mlp.up_proj
+model.layers.1.self_attn.k_proj
+model.layers.1.self_attn.o_proj
+model.layers.1.self_attn.q_proj
+model.layers.1.self_attn.v_proj
+model.layers.1.mlp.down_proj
+model.layers.1.mlp.gate_proj
+model.layers.1.mlp.up_proj
+model.layers.2.self_attn.k_proj
+model.layers.2.self_attn.o_proj
+model.layers.2.self_attn.q_proj
+model.layers.2.self_attn.v_proj
+model.layers.2.mlp.down_proj
+model.layers.2.mlp.gate_proj
+model.layers.2.mlp.up_proj
+model.layers.3.self_attn.k_proj
+model.layers.3.self_attn.o_proj
+model.layers.3.self_attn.q_proj
+model.layers.3.self_attn.v_proj
+model.layers.3.mlp.down_proj
+model.layers.3.mlp.gate_proj
+model.layers.3.mlp.up_proj
+model.layers.4.self_attn.k_proj
+model.layers.4.self_attn.o_proj
+model.layers.4.self_attn.q_proj
+model.layers.4.self_attn.v_proj
+model.layers.4.mlp.down_proj
+model.layers.4.mlp.gate_proj
+model.layers.4.mlp.up_proj
+model.layers.5.self_attn.k_proj
+model.layers.5.self_attn.o_proj
+model.layers.5.self_attn.q_proj
+model.layers.5.self_attn.v_proj
+model.layers.5.mlp.down_proj
+model.layers.5.mlp.gate_proj
+model.layers.5.mlp.up_proj
+model.layers.6.self_attn.k_proj
+model.layers.6.self_attn.o_proj
+model.layers.6.self_attn.q_proj
+model.layers.6.self_attn.v_proj
+model.layers.6.mlp.down_proj
+model.layers.6.mlp.gate_proj
+model.layers.6.mlp.up_proj
+model.layers.7.self_attn.k_proj
+model.layers.7.self_attn.o_proj
+model.layers.7.self_attn.q_proj
+model.layers.7.self_attn.v_proj
+model.layers.7.mlp.down_proj
+model.layers.7.mlp.gate_proj
+model.layers.7.mlp.up_proj
+model.layers.8.self_attn.k_proj
+model.layers.8.self_attn.o_proj
+model.layers.8.self_attn.q_proj
+model.layers.8.self_attn.v_proj
+model.layers.8.mlp.down_proj
+model.layers.8.mlp.gate_proj
+model.layers.8.mlp.up_proj
+model.layers.9.self_attn.k_proj
+model.layers.9.self_attn.o_proj
+model.layers.9.self_attn.q_proj
+model.layers.9.self_attn.v_proj
+model.layers.9.mlp.down_proj
+model.layers.9.mlp.gate_proj
+model.layers.9.mlp.up_proj
+model.layers.10.self_attn.k_proj
+model.layers.10.self_attn.o_proj
+model.layers.10.self_attn.q_proj
+model.layers.10.self_attn.v_proj
+model.layers.10.mlp.down_proj
+model.layers.10.mlp.gate_proj
+model.layers.10.mlp.up_proj
+model.layers.11.self_attn.k_proj
+model.layers.11.self_attn.o_proj
+model.layers.11.self_attn.q_proj
+model.layers.11.self_attn.v_proj
+model.layers.11.mlp.down_proj
+model.layers.11.mlp.gate_proj
+model.layers.11.mlp.up_proj
+model.layers.12.self_attn.k_proj
+model.layers.12.self_attn.o_proj
+model.layers.12.self_attn.q_proj
+model.layers.12.self_attn.v_proj
+model.layers.12.mlp.down_proj
+model.layers.12.mlp.gate_proj
+model.layers.12.mlp.up_proj
+model.layers.13.self_attn.k_proj
+model.layers.13.self_attn.o_proj
+model.layers.13.self_attn.q_proj
+model.layers.13.self_attn.v_proj
+model.layers.13.mlp.down_proj
+model.layers.13.mlp.gate_proj
+model.layers.13.mlp.up_proj
+model.layers.14.self_attn.k_proj
+model.layers.14.self_attn.o_proj
+model.layers.14.self_attn.q_proj
+model.layers.14.self_attn.v_proj
+model.layers.14.mlp.down_proj
+model.layers.14.mlp.gate_proj
+model.layers.14.mlp.up_proj
+model.layers.15.self_attn.k_proj
+model.layers.15.self_attn.o_proj
+model.layers.15.self_attn.q_proj
+model.layers.15.self_attn.v_proj
+model.layers.15.mlp.down_proj
+model.layers.15.mlp.gate_proj
+model.layers.15.mlp.up_proj
+model.layers.16.self_attn.k_proj
+model.layers.16.self_attn.o_proj
+model.layers.16.self_attn.q_proj
+model.layers.16.self_attn.v_proj
+model.layers.16.mlp.down_proj
+model.layers.16.mlp.gate_proj
+model.layers.16.mlp.up_proj
+model.layers.17.self_attn.k_proj
+model.layers.17.self_attn.o_proj
+model.layers.17.self_attn.q_proj
+model.layers.17.self_attn.v_proj
+model.layers.17.mlp.down_proj
+model.layers.17.mlp.gate_proj
+model.layers.17.mlp.up_proj
+model.layers.18.self_attn.k_proj
+model.layers.18.self_attn.o_proj
+model.layers.18.self_attn.q_proj
+model.layers.18.self_attn.v_proj
+model.layers.18.mlp.down_proj
+model.layers.18.mlp.gate_proj
+model.layers.18.mlp.up_proj
+model.layers.19.self_attn.k_proj
+model.layers.19.self_attn.o_proj
+model.layers.19.self_attn.q_proj
+model.layers.19.self_attn.v_proj
+model.layers.19.mlp.down_proj
+model.layers.19.mlp.gate_proj
+model.layers.19.mlp.up_proj
+model.layers.20.self_attn.k_proj
+model.layers.20.self_attn.o_proj
+model.layers.20.self_attn.q_proj
+model.layers.20.self_attn.v_proj
+model.layers.20.mlp.down_proj
+model.layers.20.mlp.gate_proj
+model.layers.20.mlp.up_proj
+model.layers.21.self_attn.k_proj
+model.layers.21.self_attn.o_proj
+model.layers.21.self_attn.q_proj
+model.layers.21.self_attn.v_proj
+model.layers.21.mlp.down_proj
+model.layers.21.mlp.gate_proj
+model.layers.21.mlp.up_proj
+model.layers.22.self_attn.k_proj
+model.layers.22.self_attn.o_proj
+model.layers.22.self_attn.q_proj
+model.layers.22.self_attn.v_proj
+model.layers.22.mlp.down_proj
+model.layers.22.mlp.gate_proj
+model.layers.22.mlp.up_proj
+model.layers.23.self_attn.k_proj
+model.layers.23.self_attn.o_proj
+model.layers.23.self_attn.q_proj
+model.layers.23.self_attn.v_proj
+model.layers.23.mlp.down_proj
+model.layers.23.mlp.gate_proj
+model.layers.23.mlp.up_proj
+model.layers.24.self_attn.k_proj
+model.layers.24.self_attn.o_proj
+model.layers.24.self_attn.q_proj
+model.layers.24.self_attn.v_proj
+model.layers.24.mlp.down_proj
+model.layers.24.mlp.gate_proj
+model.layers.24.mlp.up_proj
+model.layers.25.self_attn.k_proj
+model.layers.25.self_attn.o_proj
+model.layers.25.self_attn.q_proj
+model.layers.25.self_attn.v_proj
+model.layers.25.mlp.down_proj
+model.layers.25.mlp.gate_proj
+model.layers.25.mlp.up_proj
+model.layers.26.self_attn.k_proj
+model.layers.26.self_attn.o_proj
+model.layers.26.self_attn.q_proj
+model.layers.26.self_attn.v_proj
+model.layers.26.mlp.down_proj
+model.layers.26.mlp.gate_proj
+model.layers.26.mlp.up_proj
+model.layers.27.self_attn.k_proj
+model.layers.27.self_attn.o_proj
+model.layers.27.self_attn.q_proj
+model.layers.27.self_attn.v_proj
+model.layers.27.mlp.down_proj
+model.layers.27.mlp.gate_proj
+model.layers.27.mlp.up_proj
+model.layers.28.self_attn.k_proj
+model.layers.28.self_attn.o_proj
+model.layers.28.self_attn.q_proj
+model.layers.28.self_attn.v_proj
+model.layers.28.mlp.down_proj
+model.layers.28.mlp.gate_proj
+model.layers.28.mlp.up_proj
+model.layers.29.self_attn.k_proj
+model.layers.29.self_attn.o_proj
+model.layers.29.self_attn.q_proj
+model.layers.29.self_attn.v_proj
+model.layers.29.mlp.down_proj
+model.layers.29.mlp.gate_proj
+model.layers.29.mlp.up_proj
+model.layers.30.self_attn.k_proj
+model.layers.30.self_attn.o_proj
+model.layers.30.self_attn.q_proj
+model.layers.30.self_attn.v_proj
+model.layers.30.mlp.down_proj
+model.layers.30.mlp.gate_proj
+model.layers.30.mlp.up_proj
+model.layers.31.self_attn.k_proj
+model.layers.31.self_attn.o_proj
+model.layers.31.self_attn.q_proj
+model.layers.31.self_attn.v_proj
+model.layers.31.mlp.down_proj
+model.layers.31.mlp.gate_proj
+model.layers.31.mlp.up_proj
+Done.

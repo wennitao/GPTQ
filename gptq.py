@@ -55,7 +55,7 @@ class Observer:
 
 class GPTQ:
 
-    def __init__(self, layer, observe=False):
+    def __init__(self, layer, observe=False, returnQuantizedTensor=False, outliers=False):
         self.layer = layer
         self.dev = self.layer.weight.device
         W = layer.weight.data.clone()
@@ -67,7 +67,7 @@ class GPTQ:
         self.columns = W.shape[1]
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
         self.nsamples = 0
-        self.quantizer = quant.Quantizer()
+        self.quantizer = quant.Quantizer(outliers = outliers)
         self.observe = observe
 
     def add_batch(self, inp, out):
@@ -167,6 +167,7 @@ class GPTQ:
         scale = []
         zero = []
         now_idx = 1
+        total_bits = 0
 
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
@@ -181,6 +182,183 @@ class GPTQ:
             for i in range(count):
                 w = W1[:, i]
                 d = Hinv1[i, i]
+
+                if groupsize != -1:
+                    if (i1 + i) % groupsize == 0:
+                        self.quantizer.find_params(W[:, (i1 + i):(i1 + i + groupsize)], weight=True)
+
+                    if ((i1 + i) // groupsize) - now_idx == -1:
+                        scale.append(self.quantizer.scale)
+                        zero.append(self.quantizer.zero)
+                        now_idx += 1
+
+                q = self.quantizer.quantize(w.unsqueeze(1)).flatten()
+                Q1[:, i] = q
+                Losses1[:, i] = (w - q)**2 / d**2
+
+                err1 = (w - q) / d
+                W1[:, i:] -= err1.unsqueeze(1).matmul(Hinv1[i, i:].unsqueeze(0))
+                Err1[:, i] = err1
+
+                total_bits += self.quantizer.bits
+
+            Q[:, i1:i2] = Q1
+            Losses[:, i1:i2] = Losses1 / 2
+
+            W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
+
+        torch.cuda.synchronize()
+        error = torch.sum(Losses).item()
+
+        groupsize = groupsize if groupsize != -1 else self.columns
+        g_idx = [i // groupsize for i in range(self.columns)]
+        g_idx = torch.tensor(g_idx, dtype=torch.int32, device=Q.device)
+        if actorder:
+            invperm = torch.argsort(perm)
+            Q = Q[:, invperm]
+            g_idx = g_idx[invperm]
+
+        if isinstance(self.layer, transformers.Conv1D):
+            Q = Q.t()
+
+        self.print_loss(name=name, q_weight=Q, weight_error=error, timecost=(time.time() - tick))
+
+        if scale == []:
+            scale.append(self.quantizer.scale)
+            zero.append(self.quantizer.zero)
+        scale = torch.cat(scale, dim=1)
+        zero = torch.cat(zero, dim=1)
+        return scale, zero, g_idx, error, Q, total_bits
+
+    def fasterquant_dynbits(self, blocksize=128, percdamp=.01, groupsize=-1, actorder=False, name=''):
+        self.layer.to(self.dev)
+
+        W = self.layer.weight.data.clone()
+        if isinstance(self.layer, nn.Conv2d):
+            W = W.flatten(1)
+        if isinstance(self.layer, transformers.Conv1D):
+            W = W.t()
+        W = W.float()
+
+        tick = time.time()
+
+        if not self.quantizer.ready():
+            self.quantizer.find_params(W, weight=True)
+
+        H = self.H
+        if not self.observe:
+            del self.H
+        dead = torch.diag(H) == 0
+        H[dead, dead] = 1
+        W[:, dead] = 0
+
+        if actorder:
+            perm = torch.argsort(torch.diag(H), descending=True)
+            W = W[:, perm]
+            H = H[perm][:, perm]
+
+        Losses = torch.zeros_like(W)
+        Q = torch.zeros_like(W)
+
+        damp = percdamp * torch.mean(torch.diag(H))
+        diag = torch.arange(self.columns, device=self.dev)
+        H[diag, diag] += damp
+        H = torch.linalg.cholesky(H)
+        H = torch.cholesky_inverse(H)
+        H = torch.linalg.cholesky(H, upper=True)
+        Hinv = H
+
+        g_idx = []
+        scale = []
+        zero = []
+        now_idx = 1
+        orig_bits = self.quantizer.bits
+        static_bits = 0
+        dyn_bits = 0
+        total_losses = []
+
+        for i1 in range(0, self.columns, blocksize):
+            i2 = min(i1 + blocksize, self.columns)
+            count = i2 - i1
+
+            W1 = W[:, i1:i2].clone()
+            Q1 = torch.zeros_like(W1)
+            Err1 = torch.zeros_like(W1)
+            Losses1 = torch.zeros_like(W1)
+            Hinv1 = Hinv[i1:i2, i1:i2]
+
+            losses = []
+            for i in range(count):
+                w = W1[:, i]
+                d = Hinv1[i, i]
+
+                if groupsize != -1:
+                    if (i1 + i) % groupsize == 0:
+                        self.quantizer.find_params(W[:, (i1 + i):(i1 + i + groupsize)], weight=True)
+
+                    # if ((i1 + i) // groupsize) - now_idx == -1:
+                    #     scale.append(self.quantizer.scale)
+                    #     zero.append(self.quantizer.zero)
+                    #     now_idx += 1
+
+                q = self.quantizer.quantize(w.unsqueeze(1)).flatten()
+                loss = torch.sum ((w - q)**2 / d**2).item()
+                losses.append(loss)
+            
+            # avg_loss = torch.mean(torch.tensor (losses), dim=0).item()
+            # avg_loss = torch.quantile(torch.tensor (losses), 0.99).item()
+            # print ("avg_loss: " + str (avg_loss))
+            losses = torch.tensor (losses)
+            # print (losses)
+            # total_losses.append(losses)
+            loss_mean = torch.mean(losses)
+            loss_std = torch.std(losses)
+            # z_score = (losses - loss_mean) / loss_std
+            # print (z_score)
+
+            # TO FIX: find params every groupsize, but dyn bits on column
+            for i in range(count):
+                w = W1[:, i]
+                d = Hinv1[i, i]
+
+                # if groupsize != -1:
+                #     if (i1 + i) % groupsize == 0:
+                #         self.quantizer.find_params(W[:, (i1 + i):(i1 + i + groupsize)], weight=True)
+
+                self.quantizer.change_bits (orig_bits)
+
+                if groupsize != -1:
+                    if (i1 + i) % groupsize == 0:
+                        self.quantizer.find_params(W[:, (i1 + i):(i1 + i + groupsize)], weight=True)
+
+                q = self.quantizer.quantize(w.unsqueeze(1)).flatten()
+                loss = torch.sum ((w - q)**2 / d**2).item()
+                # selected_bits = orig_bits
+                # print ("orig_bits: " + str (selected_bits))
+                # print ("begin find better bits")
+                selected_bits = -1
+                candidate_bits = [2, 3, 4, 6, 8]
+                for bits in candidate_bits:
+                    self.quantizer.change_bits (bits)
+                    
+                    if groupsize != -1:
+                        if (i1 + i) % groupsize == 0:
+                            self.quantizer.find_params(W[:, (i1 + i):(i1 + i + groupsize)], weight=True)
+
+                    q = self.quantizer.quantize(w.unsqueeze(1)).flatten()
+                    loss = torch.sum ((w - q)**2 / d**2).item()
+                    cur_z_score = (loss - loss_mean) / loss_std
+                    # print (loss, cur_z_score)
+                    if abs (cur_z_score) <= 2.58: # 99% percentile
+                        selected_bits = bits
+                        break
+                if selected_bits == -1:
+                    selected_bits = 8
+                static_bits += orig_bits
+                dyn_bits += selected_bits
+                # print ("selected_bits: " + str (selected_bits))
+                
+                self.quantizer.change_bits (selected_bits)
 
                 if groupsize != -1:
                     if (i1 + i) % groupsize == 0:
@@ -218,6 +396,7 @@ class GPTQ:
         if isinstance(self.layer, transformers.Conv1D):
             Q = Q.t()
 
+        # print (total_losses)
         self.print_loss(name=name, q_weight=Q, weight_error=error, timecost=(time.time() - tick))
 
         if scale == []:
@@ -225,7 +404,7 @@ class GPTQ:
             zero.append(self.quantizer.zero)
         scale = torch.cat(scale, dim=1)
         zero = torch.cat(zero, dim=1)
-        return scale, zero, g_idx, error
+        return scale, zero, g_idx, error, Q, static_bits, dyn_bits
 
     def free(self):
         self.inp1 = None
